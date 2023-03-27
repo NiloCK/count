@@ -11,8 +11,9 @@ import (
 var repos []string = []string{
 	"vue-skuilder",
 	"tuido",
+	"count",
 }
-var startDate string = "2023"
+var startDate string = "2023-01-01"
 
 func gitDiffReport() {
 	allDifs := 0
