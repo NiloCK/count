@@ -25,6 +25,7 @@ func blogReport() {
 
 	observedRate := float64(observedProgress) / float64(days)
 	fmt.Println("BLOGRESS REPORT:")
+	fmt.Printf("  %d words written\n", observedProgress)
 
 	if observedProgress < expectedProgress {
 		fmt.Printf("  %d words behind schedule\n", expectedProgress-observedProgress)
