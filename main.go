@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,18 +24,39 @@ func main() {
 	gitDiffReport()
 }
 
-func getFilesInBlogDir() []fs.FileInfo {
-	dir, err := os.Open("/home/colin/blog")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer dir.Close()
+type QualifiedFile struct {
+	dir  string
+	file fs.FileInfo
+}
 
-	files, err := dir.Readdir(-1)
+func getMDFilesInDirRecursive(dir string) []QualifiedFile {
+	d, err := os.Open(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return files
+	defer d.Close()
+
+	files, err := d.Readdir(-1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	retFiles := []QualifiedFile{}
+	for _, file := range files {
+		if file.IsDir() {
+			subFiles := getMDFilesInDirRecursive(dir + "/" + file.Name())
+			retFiles = append(retFiles, subFiles...)
+		} else {
+			if strings.HasSuffix(file.Name(), ".md") {
+				retFiles = append(retFiles, QualifiedFile{dir, file})
+			}
+		}
+	}
+	return retFiles
+}
+
+func getFilesInBlogDir() []QualifiedFile {
+	return getMDFilesInDirRecursive("/home/colin/blog")
 }
 
 func daysSinceLastYear() int {
@@ -57,12 +79,12 @@ func totalWordCount() int {
 	return count
 }
 
-func getFileWordCount(file fs.FileInfo) int {
-	if file.IsDir() {
+func getFileWordCount(file QualifiedFile) int {
+	if file.file.IsDir() {
 		return 0
 	}
 
-	f, err := os.Open("/home/colin/blog/" + file.Name())
+	f, err := os.Open(file.dir + "/" + file.file.Name())
 	if err != nil {
 		log.Fatal(err)
 	}
